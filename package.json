@@ -9,8 +9,10 @@
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
     "@turf/square-grid": "^6.0.2",
+    "cors": "^2.8.5",
     "deck.gl": "^8.2.8",
     "express": "^4.17.1",
+    "pg": "^8.3.3",
     "react": "^16.13.1",
     "react-container-dimensions": "^1.4.1",
     "react-dom": "^16.13.1",
@@ -21,7 +23,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "server": "nodemon server/index.js"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -37,5 +40,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
   }
 }

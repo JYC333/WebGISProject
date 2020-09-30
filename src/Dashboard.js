@@ -62,7 +62,7 @@ export default function Dashboard() {
         <div className={classes.root}>
             <CssBaseline />
             <Container maxWidth={false} className={classes.container}>
-                <Grid item xs={12} md={4} lg={12}>
+                <Grid item xs={12} md={12} lg={12}>
                     <Paper className={fixedHeightPaper}>
                         <ContainerDimensions>
                             <Map />
