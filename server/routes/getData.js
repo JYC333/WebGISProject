@@ -23,49 +23,24 @@ function getData() {
     }
 
     const pool = new pg.Pool(config);
-    // var SQLcommand = "with feature as(\
-    //     select\
-    //         'Feature' as \"type\",\
-    //         ST_AsGeoJSON(gl.the_geom)::json as \"geometry\",\
-    //         (\
-    //             select\
-    //             json_strip_nulls(row_to_json(fields))\
-    //             from\
-    //             (\
-    //                 select\
-    //                 gl.gid,gl.number_of_trajectories,gl.number_of_trajectories_starting,gl.number_of_trajectories_ending\
-    //             ) as fields\
-    //         ) as \"properties\"\
-    //         from grid_layer as gl\
-    //     ),\
-    //     features as (\
-    //         select\
-    //         'FeatureCollection' as \"type\",\
-    //         array_to_json(array_agg(feature.*)) as \"features\"\
-    //         from\
-    //         feature\
-    //     )\
-    //     select row_to_json(features.*) from features";
 
-    var SQLcommand ="with feature as(\
+    var SQLcommand="with feature as(\
         select\
-            gl.gid as \"gid\",\
-            gl.number_of_trajectories as \"number_of_trajectories\",\
-            gl.number_of_trajectories_starting as \"number_of_trajectories_starting\",\
-            gl.number_of_trajectories_ending as \"number_of_trajectories_ending\",\
+            n.id as id,\
+            n.cpath as cpath,\
+            n.ts as ts,\
             (\
-                select polygon->'coordinates'->0\
+                select lines->'coordinates'\
                 from\
                 (\
-                    select ST_Envelope(gl.the_geom)::json polygon\
-                ) as polygon\
-            ) as \"contour\"\
-            from grid_layer as gl\
-            where gl.number_of_trajectories != 0\
+                    select ST_AsGeoJSON(n.mgeom)::json lines\
+                ) as lines\
+            ) as coordinates\
+            from sample1000 as n\
         ),\
         features as (\
             select\
-            array_to_json(array_agg(feature.*)) as \"features\"\
+            array_to_json(array_agg(feature.*)) as features\
             from\
             feature\
         )\
@@ -79,7 +54,6 @@ function getData() {
             }
             if (res) {
                 var jsonData = JSON.parse(JSON.stringify(res.rows));
-                console.log(jsonData[0].row_to_json);
                 resolve(jsonData[0].row_to_json);
             }
         })
