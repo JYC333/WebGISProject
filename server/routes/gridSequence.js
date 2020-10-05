@@ -34,7 +34,7 @@ function getData(girdid) {
     var SQLcommand = "with feature as(\
         select\
         grid_id as gid,\
-        count(distinct trajectory_id) as number_of_trajectories,\
+        count(distinct trajectory_id) as trajectories,\
         (\
             select polygon->'coordinates'->0\
             from\

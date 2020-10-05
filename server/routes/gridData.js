@@ -26,9 +26,9 @@ function getData() {
     var SQLcommand = "with feature as(\
         select\
             gl.gid as \"gid\",\
-            gl.number_of_trajectories as \"number_of_trajectories\",\
-            gl.number_of_trajectories_starting as \"number_of_trajectories_starting\",\
-            gl.number_of_trajectories_ending as \"number_of_trajectories_ending\",\
+            gl.number_of_trajectories as \"trajectories\",\
+            gl.number_of_trajectories_starting as \"trajectories_start\",\
+            gl.number_of_trajectories_ending as \"trajectories_end\",\
             (\
                 select polygon->'coordinates'->0\
                 from\

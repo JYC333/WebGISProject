@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DeckGL from '@deck.gl/react';
 import { PolygonLayer, PathLayer } from '@deck.gl/layers';
-import { GridLayer } from '@deck.gl/aggregation-layers';
 import { StaticMap } from 'react-map-gl';
 
 import Button from '@material-ui/core/Button';
@@ -20,7 +19,7 @@ const INITIAL_VIEW_STATE = {
   bearing: 0
 };
 
-function App() {
+function App(props) {
   const [gridData, setGridData] = useState();
   const [networkData, setNetworkData] = useState();
   const [trajectoryData, setTrajectoryData] = useState();
@@ -28,7 +27,7 @@ function App() {
   const [filteredNetworkData, setFilteredNetworkData] = useState();
   const [filteredTrajectoryData, setFilteredTrajectoryData] = useState();
   const [hoverInfo, setHoverInfo] = useState({ object: { id: '' } });
-  const [clickInfo, setClickInfo] = useState();
+  const clickInfo = props.clickInfo;
 
   const [gridSequence, setGridSequence] = useState();
   const [trajectorySequence, setTrajectorySequence] = useState();
@@ -46,31 +45,7 @@ function App() {
       getFillColor: d => [d.number_of_trajectories, 140, 0],
       getLineColor: [0, 0, 0],
       getLineWidth: 0,
-      onClick: info => {
-        fetch('http://localhost:9000/gridSequence', {
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/json;charset=utf-8;'
-          },
-          body: info.object.gid
-        })
-          .then(res => res.json())
-          .then(data => {
-            setGridSequence(data.sequence_of_grids);
-          });
-
-        fetch('http://localhost:9000/trajectorySequence', {
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/json;charset=utf-8;'
-          },
-          body: info.object.gid
-        })
-          .then(res => res.json())
-          .then(data => {
-            setTrajectorySequence(data.sequence_of_grids);
-          });
-      }
+      onClick: info => props.setClickInfo(info)
     }),
     new PolygonLayer({
       id: 'GridSequence',
@@ -155,10 +130,8 @@ function App() {
     })
       .then(res => res.json())
       .then(data => {
-        console.log(data.features);
         setTrajectoryData(data.features);
       });
-
   }, []);
 
   useEffect(() => {
@@ -173,8 +146,36 @@ function App() {
     setFilteredTrajectoryData(trajectoryData);
   }, [trajectoryData]);
 
-  function changeGird(num) {
-    setFilteredGirdData(gridData.filter(d => d.number_of_trajectories > num));
+  useEffect(() => {
+    if (clickInfo) {
+      fetch('http://localhost:9000/gridSequence', {
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json;charset=utf-8;'
+        },
+        body: clickInfo.object.gid
+      })
+        .then(res => res.json())
+        .then(data => {
+          setGridSequence(data.sequence_of_grids);
+        });
+
+      fetch('http://localhost:9000/trajectorySequence', {
+        method: 'post',
+        headers: {
+          'Content-Type': 'application/json;charset=utf-8;'
+        },
+        body: clickInfo.object.gid
+      })
+        .then(res => res.json())
+        .then(data => {
+          setTrajectorySequence(data.sequence_of_grids);
+        });
+    };
+  }, [clickInfo]);
+
+  function changeGrid(num) {
+    setFilteredGirdData(gridData.filter(d => d.trajectories > num))
   };
 
   return (
@@ -183,13 +184,15 @@ function App() {
       controller={true}
       layers={layers}
       // onHover=
-      getTooltip={({ object }) => object && `${object.gid}
-    Number of trajectories: ${object.number_of_trajectories}
-    Number of trajectories starting: ${object.number_of_trajectories_starting}
-    Number of trajectories ending: ${object.number_of_trajectories_ending}`}
+      getTooltip={
+        ({ object }) => object && `gid: ${object.gid}
+        Number of trajectories: ${object.trajectories}
+        Number of trajectories starting: ${object.trajectories_start}
+        Number of trajectories ending: ${object.trajectories_end}`
+      }
     >
       <StaticMap mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN} />
-      <Button variant="contained" color="primary" onClick={() => { changeGird(0) }}>Primary</Button>
+      <Button variant="contained" color="primary" onClick={() => { changeGrid(0) }} className="button">Primary</Button>
     </DeckGL>
   );
 }

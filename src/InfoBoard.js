@@ -1,64 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
+
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import Title from './Title';
 
-// Generate Order Data
-function createData(id, date, name, number, type) {
-  return { id, date, name, number, type };
-}
-
-const rows = [];
+import Typography from '@material-ui/core/Typography';
 
 const useStyles = makeStyles((theme) => ({
-  seeMore: {
-    marginTop: theme.spacing(3),
+  title: {
+    // marginTop: theme.spacing(1),
+    marginLeft: theme.spacing(0.5)
   },
 }));
 
-export default function InfoBoard(props) {
+function createData(id, name, value) {
+  return { id, name, value };
+}
+
+function InfoBoard(props) {
   const classes = useStyles();
-  const [id, setId] = useState(0);
+  const [rows, setRows] = useState([]);
 
   useEffect(() => {
-    if (props.info) {
-      let data = props.info.properties
-      rows.push(createData(id, data.CalendarDateKey, data.StopAreaName, data.StopAreaNumber, data.StopAreaType));
-      setId(id + 1);
-    } else {
-      rows.splice(0, 1);
-      setId(id - 1);
+    if (rows) {
+      setRows([]);
     };
-  }, [props.info]);
+    if (props.click) {
+      let content = props.click.object;
+      setRows([createData(0, "gid", content.gid),
+      createData(1, "trajectories", content.trajectories),
+      createData(2, "trajectories_start", content.trajectories_start),
+      createData(3, "trajectories_end", content.trajectories_end)]);
+    };
+  }, [props.click]);
 
   return (
     <React.Fragment>
-      <Title>Point Information</Title>
+      <Typography component="h2" variant="h6" color="primary" className={classes.title}>
+        Element Infomation
+      </Typography>
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell>CalendarDateKey</TableCell>
-            <TableCell>StopAreaName</TableCell>
-            <TableCell>StopAreaNumber</TableCell>
-            <TableCell>StopAreaType</TableCell>
+            <TableCell>Attribute</TableCell>
+            <TableCell>Value</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.id}>
-              <TableCell>{row.date}</TableCell>
               <TableCell>{row.name}</TableCell>
-              <TableCell>{row.number}</TableCell>
-              <TableCell>{row.type}</TableCell>
+              <TableCell>{row.value}</TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
-      <div className={classes.seeMore} />
     </React.Fragment>
   );
 }
+
+export default InfoBoard;
