@@ -28,6 +28,7 @@ function App(props) {
   const [filteredTrajectoryData, setFilteredTrajectoryData] = useState();
   const [hoverInfo, setHoverInfo] = useState({ object: { id: '' } });
   const clickInfo = props.clickInfo;
+  const timeFilter = props.timeFilter;
 
   const [gridSequence, setGridSequence] = useState();
   const [trajectorySequence, setTrajectorySequence] = useState();
@@ -42,7 +43,14 @@ function App(props) {
       stroked: true,
       filled: true,
       getPolygon: d => d.contour,
-      getFillColor: d => [d.number_of_trajectories, 140, 0],
+      getFillColor: d => {
+        if (d.trajectories_time && d.trajectories_time.length != 0) {
+          return [d.trajectories_time.length * 255 / 228, 140, 0];
+        }
+        else {
+          return [0, 140, 0];
+        }
+      },
       getLineColor: [0, 0, 0],
       getLineWidth: 0,
       onClick: info => props.setClickInfo(info)
@@ -72,30 +80,30 @@ function App(props) {
       getColor: [235, 152, 107],
       getWidth: d => 0.5
     }),
-    new PathLayer({
-      id: 'AllTrajectories',
-      data: filteredTrajectoryData,
-      visible: true,
-      autoHighlight: true,
-      pickable: true,
-      widthScale: 20,
-      widthMinPixels: 2,
-      getPath: d => d.coordinates,
-      getColor: [235, 152, 107],
-      getWidth: d => 0.5
-    }),
-    new PathLayer({
-      id: 'TrajectorySequence',
-      data: trajectorySequence,
-      visible: true,
-      autoHighlight: true,
-      pickable: true,
-      widthScale: 20,
-      widthMinPixels: 2,
-      getPath: d => d.coordinates,
-      getColor: [255, 0, 0],
-      getWidth: d => 0.5
-    }),
+    // new PathLayer({
+    //   id: 'AllTrajectories',
+    //   data: filteredTrajectoryData,
+    //   visible: true,
+    //   autoHighlight: true,
+    //   pickable: true,
+    //   widthScale: 20,
+    //   widthMinPixels: 2,
+    //   getPath: d => d.coordinates,
+    //   getColor: [235, 152, 107],
+    //   getWidth: d => 0.5
+    // }),
+    // new PathLayer({
+    //   id: 'TrajectorySequence',
+    //   data: trajectorySequence,
+    //   visible: true,
+    //   autoHighlight: true,
+    //   pickable: true,
+    //   widthScale: 20,
+    //   widthMinPixels: 2,
+    //   getPath: d => d.coordinates,
+    //   getColor: [255, 0, 0],
+    //   getWidth: d => 0.5
+    // }),
 
   ];
 
@@ -122,20 +130,24 @@ function App(props) {
         setNetworkData(data.features);
       });
 
-    fetch('http://localhost:9000/', {
-      method: 'get',
-      headers: {
-        'Content-Type': 'application/json;charset=utf-8;'
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
-        setTrajectoryData(data.features);
-      });
+    // fetch('http://localhost:9000/trajectoryData', {
+    //   method: 'get',
+    //   headers: {
+    //     'Content-Type': 'application/json;charset=utf-8;'
+    //   }
+    // })
+    //   .then(res => res.json())
+    //   .then(data => {
+    //     setTrajectoryData(data.features);
+    //   });
   }, []);
 
   useEffect(() => {
     setFilteredGirdData(gridData);
+    if (gridData) {
+      let max_v = Math.max.apply(Math, gridData.map(o => o.trajectories));
+      console.log(max_v);
+    }
   }, [gridData]);
 
   useEffect(() => {
@@ -160,22 +172,38 @@ function App(props) {
           setGridSequence(data.sequence_of_grids);
         });
 
-      fetch('http://localhost:9000/trajectorySequence', {
-        method: 'post',
-        headers: {
-          'Content-Type': 'application/json;charset=utf-8;'
-        },
-        body: clickInfo.object.gid
-      })
-        .then(res => res.json())
-        .then(data => {
-          setTrajectorySequence(data.sequence_of_grids);
-        });
+      // fetch('http://localhost:9000/trajectorySequence', {
+      //   method: 'post',
+      //   headers: {
+      //     'Content-Type': 'application/json;charset=utf-8;'
+      //   },
+      //   body: clickInfo.object.gid
+      // })
+      //   .then(res => res.json())
+      //   .then(data => {
+      //     setTrajectorySequence(data.sequence_of_grids);
+      //   });
     };
   }, [clickInfo]);
 
   function changeGrid(num) {
     setFilteredGirdData(gridData.filter(d => d.trajectories > num))
+  };
+
+  function changeGridTime(timeFilter) {
+    let startTime = timeFilter[0];
+    let endTime = timeFilter[1];
+    // console.log(startTime, endTime);
+    let data = [].concat(JSON.parse(JSON.stringify(gridData)));
+    data = data.map(d => {
+      if (d.trajectories_time) {
+        // console.log(d.trajectories_time.filter(d => (d > startTime) && (d < endTime)));
+        d.trajectories_time = d.trajectories_time.filter(d => (d > startTime) && (d < endTime));
+      }
+      return d;
+    }).filter(d => (d.trajectories_time != 0) && d.trajectories_time);
+    console.log(data);
+    setFilteredGirdData(data);
   };
 
   return (
@@ -192,7 +220,12 @@ function App(props) {
       }
     >
       <StaticMap mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN} />
-      <Button variant="contained" color="primary" onClick={() => { changeGrid(0) }} className="button">Primary</Button>
+      <Button variant="contained" color="primary"
+        onClick={() => {
+          // changeGrid(0);
+          changeGridTime(props.timeFilter);
+        }}
+        className="button">Primary</Button>
     </DeckGL>
   );
 }

@@ -5,9 +5,14 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
+import Switch from '@material-ui/core/Switch';
+import FormGroup from '@material-ui/core/FormGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormControl from '@material-ui/core/FormControl';
 import ContainerDimensions from 'react-container-dimensions'
 import InfoBoard from './InfoBoard';
 import Map from './Map';
+import Charts from './Charts';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -42,16 +47,25 @@ const useStyles = makeStyles((theme) => ({
         height: "97.5vh",
     },
     infoHeight: {
-        height: "48.75vh",
+        height: "40vh",
+    },
+    switchHeight: {
+        height: "13vh",
+    },
+    chartHeight: {
+        height: "40vh",
     },
 }));
 
-export default function Dashboard() {
+function Dashboard() {
     const classes = useStyles();
     const mapHeightPaper = clsx(classes.mapPaper, classes.mapHeight);
     const infoHeightPaper = clsx(classes.paper, classes.infoHeight);
+    const switchHeightPaper = clsx(classes.paper, classes.switchHeight);
+    const chartHeightPaper = clsx(classes.paper, classes.chartHeight);
     const [clickInfo, setClickInfo] = useState();
     const [hoverInfo, setHoverInfo] = useState();
+    const [timeFilter, setTimeFilter] = useState();
 
     return (
         <div className={classes.root}>
@@ -61,21 +75,53 @@ export default function Dashboard() {
                     <Grid item xs={9}>
                         <Paper className={mapHeightPaper}>
                             <ContainerDimensions>
-                                <Map clickInfo={clickInfo} setClickInfo={setClickInfo} hover={setHoverInfo} />
+                                <Map
+                                    clickInfo={clickInfo}
+                                    setClickInfo={setClickInfo}
+                                    hover={setHoverInfo}
+                                    timeFilter={timeFilter}
+                                />
                             </ContainerDimensions>
-                            {/* <Button variant="contained" color="primary" onClick={() => {
-                                test.current.changeGrid(0);
-                            }} className="button">Primary</Button> */}
                         </Paper>
                     </Grid>
-                    {/* Recent Deposits */}
                     <Grid item xs={3}>
-                        <Paper className={infoHeightPaper}>
-                            <InfoBoard click={clickInfo} hover={hoverInfo} />
-                        </Paper>
+                        <Grid container spacing={1} direction="column">
+                            <Grid item>
+                                <Paper className={infoHeightPaper}>
+                                    <InfoBoard click={clickInfo} hover={hoverInfo} />
+                                </Paper>
+                            </Grid>
+                            <Grid item>
+                                <Paper className={switchHeightPaper}>
+                                    {/* <FormControl component="fieldset"> */}
+                                    <FormGroup aria-label="position" row>
+                                        <FormControlLabel
+                                            value="start"
+                                            control={<Switch color="primary" />}
+                                            label="Multi-Select"
+                                            labelPlacement="start"
+                                        />
+                                        {/* <FormControlLabel
+                                            value="start"
+                                            control={<Switch color="primary" />}
+                                            label="Start"
+                                            labelPlacement="start"
+                                        /> */}
+                                    </FormGroup>
+                                    {/* </FormControl> */}
+                                </Paper>
+                            </Grid>
+                            <Grid item>
+                                <Paper className={chartHeightPaper}>
+                                    <Charts setTimeFilter={setTimeFilter} />
+                                </Paper>
+                            </Grid>
+                        </Grid>
                     </Grid>
                 </Grid>
             </Container>
         </div>
     );
 }
+
+export default Dashboard;

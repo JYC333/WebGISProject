@@ -7,14 +7,16 @@ var cors = require('cors');
 app.use(cors());
 // app.use(express.static(path.join(__dirname, 'public')));
 
-var getDataRouter = require('./routes/getData');
+var chartsDataRouter = require('./routes/chartsData');
 var gridDataRouter = require('./routes/gridData');
+var trajectoryDataRouter = require('./routes/trajectoryData');
 var gridSequenceRouter = require('./routes/gridSequence');
 var trajectorySequenceRouter = require('./routes/trajectorySequence');
 
 
-app.use('/', getDataRouter);
+app.use('/chartsData', chartsDataRouter);
 app.use('/girdData', gridDataRouter);
+app.use('/trajectoryData', trajectoryDataRouter);
 app.use('/gridSequence', gridSequenceRouter);
 app.use('/trajectorySequence', trajectorySequenceRouter);
 

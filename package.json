@@ -11,13 +11,16 @@
     "@turf/square-grid": "^6.0.2",
     "cors": "^2.8.5",
     "deck.gl": "^8.2.8",
+    "echarts": "^4.9.0",
+    "echarts-for-react": "^2.0.16",
     "express": "^4.17.1",
     "pg": "^8.3.3",
     "react": "^16.13.1",
     "react-container-dimensions": "^1.4.1",
     "react-dom": "^16.13.1",
     "react-map-gl": "^5.2.8",
-    "react-scripts": "3.4.3"
+    "react-scripts": "^3.4.4",
+    "use-global-hook": "^0.2.1"
   },
   "scripts": {
     "start": "react-scripts start",
