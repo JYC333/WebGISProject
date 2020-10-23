@@ -44,7 +44,7 @@ const useStyles = makeStyles((theme) => ({
         flexDirection: 'column',
     },
     mapHeight: {
-        height: "97.5vh",
+        height: "74vh",
     },
     infoHeight: {
         height: "40vh",
@@ -53,7 +53,7 @@ const useStyles = makeStyles((theme) => ({
         height: "13vh",
     },
     chartHeight: {
-        height: "40vh",
+        height: "22vh",
     },
 }));
 
@@ -62,7 +62,7 @@ function Dashboard() {
     const mapHeightPaper = clsx(classes.mapPaper, classes.mapHeight);
     const infoHeightPaper = clsx(classes.paper, classes.infoHeight);
     const switchHeightPaper = clsx(classes.paper, classes.switchHeight);
-    const chartHeightPaper = clsx(classes.paper, classes.chartHeight);
+    const chartHeightPaper = clsx(classes.mapPaper, classes.chartHeight);
     const [clickInfo, setClickInfo] = useState();
     const [hoverInfo, setHoverInfo] = useState();
     const [timeFilter, setTimeFilter] = useState();
@@ -73,16 +73,25 @@ function Dashboard() {
             <Container maxWidth={false} className={classes.container}>
                 <Grid container spacing={1}>
                     <Grid item xs={9}>
-                        <Paper className={mapHeightPaper}>
-                            <ContainerDimensions>
-                                <Map
-                                    clickInfo={clickInfo}
-                                    setClickInfo={setClickInfo}
-                                    hover={setHoverInfo}
-                                    timeFilter={timeFilter}
-                                />
-                            </ContainerDimensions>
-                        </Paper>
+                        <Grid container spacing={1} direction="column">
+                            <Grid item>
+                                <Paper className={mapHeightPaper}>
+                                    <ContainerDimensions>
+                                        <Map
+                                            clickInfo={clickInfo}
+                                            setClickInfo={setClickInfo}
+                                            hover={setHoverInfo}
+                                            timeFilter={timeFilter}
+                                        />
+                                    </ContainerDimensions>
+                                </Paper>
+                            </Grid>
+                            <Grid item>
+                                <Paper className={chartHeightPaper}>
+                                    <Charts setTimeFilter={setTimeFilter} />
+                                </Paper>
+                            </Grid>
+                        </Grid>
                     </Grid>
                     <Grid item xs={3}>
                         <Grid container spacing={1} direction="column">
@@ -109,11 +118,6 @@ function Dashboard() {
                                         /> */}
                                     </FormGroup>
                                     {/* </FormControl> */}
-                                </Paper>
-                            </Grid>
-                            <Grid item>
-                                <Paper className={chartHeightPaper}>
-                                    <Charts setTimeFilter={setTimeFilter} />
                                 </Paper>
                             </Grid>
                         </Grid>

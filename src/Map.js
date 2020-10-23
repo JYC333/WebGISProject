@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import DeckGL from '@deck.gl/react';
-import { PolygonLayer, PathLayer } from '@deck.gl/layers';
+import { PolygonLayer, PathLayer, GridCellLayer } from '@deck.gl/layers';
 import { StaticMap } from 'react-map-gl';
+import { S2 } from 's2-geometry';
+
+import useTimeFilter from './store/timeFilter';
+import useMaxIndex from './store/maxIndex';
 
 import Button from '@material-ui/core/Button';
 
@@ -27,6 +31,11 @@ function App(props) {
   const [filteredNetworkData, setFilteredNetworkData] = useState();
   const [filteredTrajectoryData, setFilteredTrajectoryData] = useState();
   const [hoverInfo, setHoverInfo] = useState({ object: { id: '' } });
+  const [maxIndex, setMaxIndex] = useState(0);
+  const [intervalF, setIntervalF] = useState();
+  const [count, setCount] = useState(0);
+  const [timeFilterState, timeFilterActions] = useTimeFilter();
+  const [maxIndexState, maxIndexActions] = useMaxIndex();
   const clickInfo = props.clickInfo;
   const timeFilter = props.timeFilter;
 
@@ -34,15 +43,18 @@ function App(props) {
   const [trajectorySequence, setTrajectorySequence] = useState();
 
   const layers = [
-    new PolygonLayer({
+    new GridCellLayer({
       id: 'NetworkGrid',
       data: filteredGirdData,
       visible: true,
+      extruded: false,
       autoHighlight: true,
       pickable: true,
       stroked: true,
       filled: true,
-      getPolygon: d => d.contour,
+      cellSize: 450,
+      getElevation: 0,
+      getPosition: d => d.contour,
       getFillColor: d => {
         if (d.trajectories_time && d.trajectories_time.length != 0) {
           return [d.trajectories_time.length * 255 / 228, 140, 0];
@@ -146,7 +158,7 @@ function App(props) {
     setFilteredGirdData(gridData);
     if (gridData) {
       let max_v = Math.max.apply(Math, gridData.map(o => o.trajectories));
-      console.log(max_v);
+      // console.log(max_v);
     }
   }, [gridData]);
 
@@ -190,21 +202,62 @@ function App(props) {
     setFilteredGirdData(gridData.filter(d => d.trajectories > num))
   };
 
-  function changeGridTime(timeFilter) {
-    let startTime = timeFilter[0];
-    let endTime = timeFilter[1];
+  function changeGridTime(startTime, endTime) {
+    // let startTime = timeFilter[0];
+    // let endTime = timeFilter[1];
     // console.log(startTime, endTime);
     let data = [].concat(JSON.parse(JSON.stringify(gridData)));
     data = data.map(d => {
       if (d.trajectories_time) {
         // console.log(d.trajectories_time.filter(d => (d > startTime) && (d < endTime)));
-        d.trajectories_time = d.trajectories_time.filter(d => (d > startTime) && (d < endTime));
+        d.trajectories_time = d.trajectories_time.filter(d => (d >= startTime) && (d <= endTime));
+      }
+      if (d.trajectories_start) {
+        d.trajectories_start = d.trajectories_start.filter(d => (d >= startTime) && (d <= endTime));
+      }
+      if (d.trajectories_end) {
+        d.trajectories_end = d.trajectories_end.filter(d => (d >= startTime) && (d <= endTime));
       }
       return d;
     }).filter(d => (d.trajectories_time != 0) && d.trajectories_time);
-    console.log(data);
+    // console.log(data);
     setFilteredGirdData(data);
   };
+
+  function Play() {
+    let interval = setInterval(() => { setCount(count => count + 1) }, 200);
+    setIntervalF(interval);
+  };
+
+  function Stop() {
+    clearInterval(intervalF);
+  }
+
+  useEffect(() => {
+    // console.log(count);
+    if (timeFilterState.endIndex < maxIndexState.maxIndex) {
+      timeFilterActions.setStartIndex(timeFilterState.startIndex + 5);
+      timeFilterActions.setEndIndex(timeFilterState.endIndex + 5);
+    }
+    else {
+      let inter = timeFilterState.endIndex - timeFilterState.startIndex;
+      timeFilterActions.setStartIndex(0);
+      timeFilterActions.setEndIndex(inter);
+    }
+    // console.log(timeFilterState);
+  }, [count]);
+
+  useEffect(() => {
+    if (timeFilterState.endIndex > maxIndexState.maxIndex) {
+      maxIndexActions.setMaxIndex(timeFilterState.endIndex);
+    }
+  });
+
+  useEffect(() => {
+    if (gridData) {
+      changeGridTime(timeFilterState.startTimestamp, timeFilterState.endTimestamp);
+    }
+  }, [timeFilterState.startTimestamp, timeFilterState.endTimestamp]);
 
   return (
     <DeckGL
@@ -214,18 +267,25 @@ function App(props) {
       // onHover=
       getTooltip={
         ({ object }) => object && `gid: ${object.gid}
-        Number of trajectories: ${object.trajectories}
-        Number of trajectories starting: ${object.trajectories_start}
-        Number of trajectories ending: ${object.trajectories_end}`
+        Number of trajectories: ${object.trajectories_time ? object.trajectories_time.length : 0}
+        Number of trajectories starting: ${object.trajectories_start ? object.trajectories_start.length : 0}
+        Number of trajectories ending: ${object.trajectories_end ? object.trajectories_end.length : 0}`
       }
     >
       <StaticMap mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN} />
       <Button variant="contained" color="primary"
         onClick={() => {
           // changeGrid(0);
-          changeGridTime(props.timeFilter);
+          // changeGridTime(timeFilterState.startTimestamp, timeFilterState.endTimestamp);
+          Play();
         }}
-        className="button">Primary</Button>
+        className="button">Play</Button>
+      <Button variant="contained" color="primary"
+        onClick={() => {
+          Stop();
+        }}
+        className="button">Stop</Button>
+
     </DeckGL>
   );
 }

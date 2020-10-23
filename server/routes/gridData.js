@@ -27,14 +27,14 @@ function getData() {
         select\
             gl.gid as \"gid\",\
             gl.number_of_trajectories as \"trajectories\",\
-            gl.number_of_trajectories_starting as \"trajectories_start\",\
-            gl.number_of_trajectories_ending as \"trajectories_end\",\
+            gl.trajectories_start as \"trajectories_start\",\
+            gl.trajectories_end as \"trajectories_end\",\
             gl.trajectories_time as \"trajectories_time\",\
             (\
-                select polygon->'coordinates'->0\
+                select polygon->'coordinates'\
                 from\
                 (\
-                    select ST_Envelope(gl.the_geom)::json polygon\
+                    select st_centroid(gl.the_geom)::json polygon\
                 ) as polygon\
             ) as \"contour\"\
             from grid_layer as gl\
