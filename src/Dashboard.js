@@ -5,15 +5,13 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import Container from '@material-ui/core/Container';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
-import Switch from '@material-ui/core/Switch';
-import FormGroup from '@material-ui/core/FormGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import FormControl from '@material-ui/core/FormControl';
 import ContainerDimensions from 'react-container-dimensions'
 import InfoBoard from './InfoBoard';
+import SwitchBoard from './SwitchBoard';
 import Map from './Map';
-import Charts from './Charts';
-
+import TimeSlider from './TimeSlider';
+import DisBar from './DisBar';
+import DisPie from './DisPie';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -30,6 +28,11 @@ const useStyles = makeStyles((theme) => ({
     container: {
         paddingTop: theme.spacing(1),
         paddingBottom: theme.spacing(1),
+    },
+    formControl: {
+        margin: theme.spacing(1),
+        minWidth: 50,
+        width: 200
     },
     mapPaper: {
         padding: theme.spacing(1),
@@ -50,10 +53,10 @@ const useStyles = makeStyles((theme) => ({
         height: "40vh",
     },
     switchHeight: {
-        height: "13vh",
+        height: "32vh",
     },
     chartHeight: {
-        height: "22vh",
+        height: "24vh",
     },
 }));
 
@@ -61,65 +64,54 @@ function Dashboard() {
     const classes = useStyles();
     const mapHeightPaper = clsx(classes.mapPaper, classes.mapHeight);
     const infoHeightPaper = clsx(classes.paper, classes.infoHeight);
-    const switchHeightPaper = clsx(classes.paper, classes.switchHeight);
+    const switchHeightPaper = clsx(classes.mapPaper, classes.switchHeight);
     const chartHeightPaper = clsx(classes.mapPaper, classes.chartHeight);
-    const [clickInfo, setClickInfo] = useState();
-    const [hoverInfo, setHoverInfo] = useState();
-    const [timeFilter, setTimeFilter] = useState();
 
     return (
         <div className={classes.root}>
             <CssBaseline />
             <Container maxWidth={false} className={classes.container}>
-                <Grid container spacing={1}>
-                    <Grid item xs={9}>
-                        <Grid container spacing={1} direction="column">
+                <Grid container spacing={3} direction="column">
+                    <Grid container spacing={1}>
+                        <Grid item xs={9}>
                             <Grid item>
                                 <Paper className={mapHeightPaper}>
                                     <ContainerDimensions>
-                                        <Map
-                                            clickInfo={clickInfo}
-                                            setClickInfo={setClickInfo}
-                                            hover={setHoverInfo}
-                                            timeFilter={timeFilter}
-                                        />
+                                        <Map />
                                     </ContainerDimensions>
                                 </Paper>
                             </Grid>
-                            <Grid item>
-                                <Paper className={chartHeightPaper}>
-                                    <Charts setTimeFilter={setTimeFilter} />
-                                </Paper>
+                        </Grid>
+                        <Grid item xs={3}>
+                            <Grid container spacing={1} direction="column">
+                                <Grid item>
+                                    <Paper className={infoHeightPaper}>
+                                        <InfoBoard />
+                                    </Paper>
+                                </Grid>
+                                <Grid item>
+                                    <Paper className={switchHeightPaper}>
+                                        <SwitchBoard />
+                                    </Paper>
+                                </Grid>
                             </Grid>
                         </Grid>
                     </Grid>
-                    <Grid item xs={3}>
-                        <Grid container spacing={1} direction="column">
-                            <Grid item>
-                                <Paper className={infoHeightPaper}>
-                                    <InfoBoard click={clickInfo} hover={hoverInfo} />
-                                </Paper>
-                            </Grid>
-                            <Grid item>
-                                <Paper className={switchHeightPaper}>
-                                    {/* <FormControl component="fieldset"> */}
-                                    <FormGroup aria-label="position" row>
-                                        <FormControlLabel
-                                            value="start"
-                                            control={<Switch color="primary" />}
-                                            label="Multi-Select"
-                                            labelPlacement="start"
-                                        />
-                                        {/* <FormControlLabel
-                                            value="start"
-                                            control={<Switch color="primary" />}
-                                            label="Start"
-                                            labelPlacement="start"
-                                        /> */}
-                                    </FormGroup>
-                                    {/* </FormControl> */}
-                                </Paper>
-                            </Grid>
+                    <Grid container spacing={1}>
+                        <Grid item xs={6}>
+                            <Paper className={chartHeightPaper}>
+                                <TimeSlider />
+                            </Paper>
+                        </Grid>
+                        <Grid item xs={3}>
+                            <Paper className={chartHeightPaper}>
+                                <DisBar />
+                            </Paper>
+                        </Grid>
+                        <Grid item xs={3}>
+                            <Paper className={chartHeightPaper}>
+                                <DisPie />
+                            </Paper>
                         </Grid>
                     </Grid>
                 </Grid>

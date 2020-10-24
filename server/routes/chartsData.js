@@ -50,7 +50,6 @@ function getData() {
             }
             if (res) {
                 var jsonData = JSON.parse(JSON.stringify(res.rows));
-                console.log(jsonData[0].row_to_json)
                 resolve(jsonData[0].row_to_json);
             }
         })

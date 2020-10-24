@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import DeckGL from '@deck.gl/react';
-import { PolygonLayer, PathLayer, GridCellLayer } from '@deck.gl/layers';
+import { PathLayer, GridCellLayer } from '@deck.gl/layers';
 import { StaticMap } from 'react-map-gl';
-import { S2 } from 's2-geometry';
 
 import useTimeFilter from './store/timeFilter';
-import useMaxIndex from './store/maxIndex';
-
-import Button from '@material-ui/core/Button';
+import useMaxValue from './store/maxValue';
+import useMapEventInfo from './store/mapEventInfo';
 
 import './style.css'
 
@@ -23,24 +21,23 @@ const INITIAL_VIEW_STATE = {
   bearing: 0
 };
 
-function App(props) {
+function App() {
   const [gridData, setGridData] = useState();
   const [networkData, setNetworkData] = useState();
   const [trajectoryData, setTrajectoryData] = useState();
+
+  const [gridData1, setGridData1] = useState();
+  const [trajectoryData1, setTrajectoryData1] = useState();
+
   const [filteredGirdData, setFilteredGirdData] = useState();
-  const [filteredNetworkData, setFilteredNetworkData] = useState();
   const [filteredTrajectoryData, setFilteredTrajectoryData] = useState();
-  const [hoverInfo, setHoverInfo] = useState({ object: { id: '' } });
-  const [maxIndex, setMaxIndex] = useState(0);
-  const [intervalF, setIntervalF] = useState();
-  const [count, setCount] = useState(0);
+
   const [timeFilterState, timeFilterActions] = useTimeFilter();
-  const [maxIndexState, maxIndexActions] = useMaxIndex();
-  const clickInfo = props.clickInfo;
-  const timeFilter = props.timeFilter;
+  const [maxValueState, maxValueActions] = useMaxValue();
+  const [mapEventInfoState, mapEventInfoActions] = useMapEventInfo();
+  const clickInfo = mapEventInfoState.clickInfo;
 
   const [gridSequence, setGridSequence] = useState();
-  const [trajectorySequence, setTrajectorySequence] = useState();
 
   const layers = [
     new GridCellLayer({
@@ -56,34 +53,53 @@ function App(props) {
       getElevation: 0,
       getPosition: d => d.contour,
       getFillColor: d => {
-        if (d.trajectories_time && d.trajectories_time.length != 0) {
-          return [d.trajectories_time.length * 255 / 228, 140, 0];
-        }
-        else {
-          return [0, 140, 0];
+        if (mapEventInfoState.colorAttribute === 1) {
+          if (d.trajectories && d.trajectories.length !== 0) {
+            return [d.trajectories.length * 255 / maxValueState.maxTrajectory, 140, 0];
+          }
+          else {
+            return [0, 140, 0];
+          }
+        } else if (mapEventInfoState.colorAttribute === 2) {
+          if (d.trajectories_start && d.trajectories_start.length !== 0) {
+            return [140, d.trajectories_start.length * 255 / maxValueState.maxTrajectoryStart, 0];
+          }
+          else {
+            return [0, 140, 0];
+          }
+        } else if (mapEventInfoState.colorAttribute === 3) {
+          if (d.trajectories_end && d.trajectories_end.length !== 0) {
+            return [0, 140, d.trajectories_end.length * 255 / maxValueState.maxTrajectoryEnd,];
+          }
+          else {
+            return [0, 140, 0];
+          }
         }
       },
       getLineColor: [0, 0, 0],
       getLineWidth: 0,
-      onClick: info => props.setClickInfo(info)
+      onClick: info => mapEventInfoActions.setClickInfo(info)
     }),
-    new PolygonLayer({
+    new GridCellLayer({
       id: 'GridSequence',
       data: gridSequence,
       visible: true,
+      extruded: false,
       autoHighlight: true,
-      pickable: true,
+      pickable: false,
       stroked: true,
       filled: true,
-      getPolygon: d => d.contour,
+      cellSize: 450,
+      getElevation: 0,
+      getPosition: d => d.contour,
       getFillColor: d => [0, 255, 255],
       getLineColor: [0, 0, 0],
       getLineWidth: 0,
     }),
     new PathLayer({
       id: 'RoadNetwork',
-      data: filteredNetworkData,
-      visible: false,
+      data: networkData,
+      visible: mapEventInfoState.showNetwork,
       autoHighlight: true,
       pickable: true,
       widthScale: 20,
@@ -92,31 +108,18 @@ function App(props) {
       getColor: [235, 152, 107],
       getWidth: d => 0.5
     }),
-    // new PathLayer({
-    //   id: 'AllTrajectories',
-    //   data: filteredTrajectoryData,
-    //   visible: true,
-    //   autoHighlight: true,
-    //   pickable: true,
-    //   widthScale: 20,
-    //   widthMinPixels: 2,
-    //   getPath: d => d.coordinates,
-    //   getColor: [235, 152, 107],
-    //   getWidth: d => 0.5
-    // }),
-    // new PathLayer({
-    //   id: 'TrajectorySequence',
-    //   data: trajectorySequence,
-    //   visible: true,
-    //   autoHighlight: true,
-    //   pickable: true,
-    //   widthScale: 20,
-    //   widthMinPixels: 2,
-    //   getPath: d => d.coordinates,
-    //   getColor: [255, 0, 0],
-    //   getWidth: d => 0.5
-    // }),
-
+    new PathLayer({
+      id: 'AllTrajectories',
+      data: filteredTrajectoryData,
+      visible: mapEventInfoState.showTrajectory,
+      autoHighlight: true,
+      pickable: true,
+      widthScale: 20,
+      widthMinPixels: 2,
+      getPath: d => d.coordinates,
+      getColor: [235, 152, 107],
+      getWidth: d => 0.5
+    }),
   ];
 
   useEffect(() => {
@@ -131,6 +134,18 @@ function App(props) {
         setGridData(data.features);
       });
 
+    fetch('http://localhost:9000/girdData1', {
+      method: 'get',
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8;'
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setGridData1(data.features);
+      });
+
+
     fetch('http://localhost:9000/NetworkData', {
       method: 'get',
       headers: {
@@ -142,33 +157,55 @@ function App(props) {
         setNetworkData(data.features);
       });
 
-    // fetch('http://localhost:9000/trajectoryData', {
-    //   method: 'get',
-    //   headers: {
-    //     'Content-Type': 'application/json;charset=utf-8;'
-    //   }
-    // })
-    //   .then(res => res.json())
-    //   .then(data => {
-    //     setTrajectoryData(data.features);
-    //   });
+    fetch('http://localhost:9000/trajectoryData', {
+      method: 'get',
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8;'
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setTrajectoryData(data.features);
+      });
+
+    fetch('http://localhost:9000/trajectoryData1', {
+      method: 'get',
+      headers: {
+        'Content-Type': 'application/json;charset=utf-8;'
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        setTrajectoryData1(data.features);
+      });
   }, []);
 
   useEffect(() => {
-    setFilteredGirdData(gridData);
-    if (gridData) {
-      let max_v = Math.max.apply(Math, gridData.map(o => o.trajectories));
-      // console.log(max_v);
+    if (mapEventInfoState.dataset === 1) {
+      setFilteredGirdData(gridData);
+      if (gridData) {
+        maxValueActions.setMaxTrajectory(Math.max.apply(Math, gridData.map(o => o.trajectories ? o.trajectories.length : 0)));
+        maxValueActions.setMaxTrajectoryStart(Math.max.apply(Math, gridData.map(o => o.trajectories_start ? o.trajectories_start.length : 0)));
+        maxValueActions.setMaxTrajectoryEnd(Math.max.apply(Math, gridData.map(o => o.trajectories_end ? o.trajectories_end.length : 0)));
+      }
+    } else if (mapEventInfoState.dataset === 2) {
+      setFilteredGirdData(gridData1);
+      if (gridData1) {
+        maxValueActions.setMaxTrajectory(Math.max.apply(Math, gridData1.map(o => o.trajectories ? o.trajectories.length : 0)));
+        maxValueActions.setMaxTrajectoryStart(Math.max.apply(Math, gridData1.map(o => o.trajectories_start ? o.trajectories_start.length : 0)));
+        maxValueActions.setMaxTrajectoryEnd(Math.max.apply(Math, gridData1.map(o => o.trajectories_end ? o.trajectories_end.length : 0)));
+      }
     }
-  }, [gridData]);
+
+  }, [mapEventInfoState.dataset, gridData]);
 
   useEffect(() => {
-    setFilteredNetworkData(networkData);
-  }, [networkData]);
-
-  useEffect(() => {
-    setFilteredTrajectoryData(trajectoryData);
-  }, [trajectoryData]);
+    if (mapEventInfoState.dataset === 1) {
+      setFilteredTrajectoryData(trajectoryData);
+    } else if (mapEventInfoState.dataset === 2) {
+      setFilteredTrajectoryData(trajectoryData1);
+    }
+  }, [mapEventInfoState.dataset, trajectoryData])
 
   useEffect(() => {
     if (clickInfo) {
@@ -183,34 +220,14 @@ function App(props) {
         .then(data => {
           setGridSequence(data.sequence_of_grids);
         });
-
-      // fetch('http://localhost:9000/trajectorySequence', {
-      //   method: 'post',
-      //   headers: {
-      //     'Content-Type': 'application/json;charset=utf-8;'
-      //   },
-      //   body: clickInfo.object.gid
-      // })
-      //   .then(res => res.json())
-      //   .then(data => {
-      //     setTrajectorySequence(data.sequence_of_grids);
-      //   });
     };
   }, [clickInfo]);
 
-  function changeGrid(num) {
-    setFilteredGirdData(gridData.filter(d => d.trajectories > num))
-  };
-
-  function changeGridTime(startTime, endTime) {
-    // let startTime = timeFilter[0];
-    // let endTime = timeFilter[1];
-    // console.log(startTime, endTime);
+  function changeGridTime(gridData, startTime, endTime) {
     let data = [].concat(JSON.parse(JSON.stringify(gridData)));
     data = data.map(d => {
-      if (d.trajectories_time) {
-        // console.log(d.trajectories_time.filter(d => (d > startTime) && (d < endTime)));
-        d.trajectories_time = d.trajectories_time.filter(d => (d >= startTime) && (d <= endTime));
+      if (d.trajectories) {
+        d.trajectories = d.trajectories.filter(d => (d >= startTime) && (d <= endTime));
       }
       if (d.trajectories_start) {
         d.trajectories_start = d.trajectories_start.filter(d => (d >= startTime) && (d <= endTime));
@@ -219,45 +236,31 @@ function App(props) {
         d.trajectories_end = d.trajectories_end.filter(d => (d >= startTime) && (d <= endTime));
       }
       return d;
-    }).filter(d => (d.trajectories_time != 0) && d.trajectories_time);
-    // console.log(data);
+    }).filter(d => (d.trajectories != 0) && d.trajectories);
     setFilteredGirdData(data);
   };
 
-  function Play() {
-    let interval = setInterval(() => { setCount(count => count + 1) }, 200);
-    setIntervalF(interval);
-  };
-
-  function Stop() {
-    clearInterval(intervalF);
-  }
-
   useEffect(() => {
-    // console.log(count);
-    if (timeFilterState.endIndex < maxIndexState.maxIndex) {
-      timeFilterActions.setStartIndex(timeFilterState.startIndex + 5);
-      timeFilterActions.setEndIndex(timeFilterState.endIndex + 5);
-    }
-    else {
-      let inter = timeFilterState.endIndex - timeFilterState.startIndex;
-      timeFilterActions.setStartIndex(0);
-      timeFilterActions.setEndIndex(inter);
-    }
-    // console.log(timeFilterState);
-  }, [count]);
-
-  useEffect(() => {
-    if (timeFilterState.endIndex > maxIndexState.maxIndex) {
-      maxIndexActions.setMaxIndex(timeFilterState.endIndex);
+    if (timeFilterState.endIndex > maxValueState.maxIndex) {
+      maxValueActions.setMaxIndex(timeFilterState.endIndex);
     }
   });
 
   useEffect(() => {
-    if (gridData) {
-      changeGridTime(timeFilterState.startTimestamp, timeFilterState.endTimestamp);
+    if (mapEventInfoState.dataset === 1) {
+      if (gridData) {
+        changeGridTime(gridData, timeFilterState.startTimestamp, timeFilterState.endTimestamp);
+      }
+    } else if (mapEventInfoState.dataset === 2) {
+      if (gridData1) {
+        changeGridTime(gridData1, timeFilterState.startTimestamp, timeFilterState.endTimestamp);
+      }
     }
-  }, [timeFilterState.startTimestamp, timeFilterState.endTimestamp]);
+  }, [timeFilterState.startTimestamp, timeFilterState.endTimestamp, mapEventInfoState.colorAttribute]);
+
+  useEffect(() => {
+    setGridSequence(null);
+  }, [mapEventInfoState.cleanSelect])
 
   return (
     <DeckGL
@@ -267,25 +270,12 @@ function App(props) {
       // onHover=
       getTooltip={
         ({ object }) => object && `gid: ${object.gid}
-        Number of trajectories: ${object.trajectories_time ? object.trajectories_time.length : 0}
+        Number of trajectories: ${object.trajectories ? object.trajectories.length : 0}
         Number of trajectories starting: ${object.trajectories_start ? object.trajectories_start.length : 0}
         Number of trajectories ending: ${object.trajectories_end ? object.trajectories_end.length : 0}`
       }
     >
       <StaticMap mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN} />
-      <Button variant="contained" color="primary"
-        onClick={() => {
-          // changeGrid(0);
-          // changeGridTime(timeFilterState.startTimestamp, timeFilterState.endTimestamp);
-          Play();
-        }}
-        className="button">Play</Button>
-      <Button variant="contained" color="primary"
-        onClick={() => {
-          Stop();
-        }}
-        className="button">Stop</Button>
-
     </DeckGL>
   );
 }

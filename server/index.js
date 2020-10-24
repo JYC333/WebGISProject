@@ -8,16 +8,24 @@ app.use(cors());
 // app.use(express.static(path.join(__dirname, 'public')));
 
 var chartsDataRouter = require('./routes/chartsData');
+var chartsData1Router = require('./routes/chartsData1');
 var gridDataRouter = require('./routes/gridData');
+var gridData1Router = require('./routes/gridData1');
 var trajectoryDataRouter = require('./routes/trajectoryData');
+var trajectoryData1Router = require('./routes/trajectoryData1');
 var gridSequenceRouter = require('./routes/gridSequence');
+var gridSequence1Router = require('./routes/gridSequence1');
 var trajectorySequenceRouter = require('./routes/trajectorySequence');
 
 
 app.use('/chartsData', chartsDataRouter);
+app.use('/chartsData1', chartsData1Router);
 app.use('/girdData', gridDataRouter);
+app.use('/girdData1', gridData1Router);
 app.use('/trajectoryData', trajectoryDataRouter);
+app.use('/trajectoryData1', trajectoryData1Router);
 app.use('/gridSequence', gridSequenceRouter);
+app.use('/gridSequence1', gridSequence1Router);
 app.use('/trajectorySequence', trajectorySequenceRouter);
 
 app.get('/NetworkData', function (req, res) {

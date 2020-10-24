@@ -39,7 +39,7 @@ function getData() {
             td.till as \"till\",\
             td.inside as \"inside\",\
             td.past as \"past\"\
-            from tbl_distance as td\
+            from tbl_distance1 as td\
         ),\
         features as (\
             select\

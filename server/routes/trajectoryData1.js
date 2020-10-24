@@ -23,27 +23,24 @@ function getData() {
     }
 
     const pool = new pg.Pool(config);
-    var SQLcommand = "with feature as(\
+
+    var SQLcommand="with feature as(\
         select\
-            td.grid_id as \"gid\",\
-            td.trajectories as \"trajectories\",\
-            td.trajectories_start as \"trajectories_start\",\
-            td.trajectories_end as \"trajectories_end\",\
+            n.id as id,\
+            n.cpath as cpath,\
+            n.ts as ts,\
             (\
-                select polygon->'coordinates'\
+                select lines->'coordinates'\
                 from\
                 (\
-                    select st_centroid(td.the_geom)::json polygon\
-                ) as polygon\
-            ) as \"contour\",\
-            td.till as \"till\",\
-            td.inside as \"inside\",\
-            td.past as \"past\"\
-            from tbl_distance as td\
+                    select ST_AsGeoJSON(n.mgeom)::json lines\
+                ) as lines\
+            ) as coordinates\
+            from sample10000 as n\
         ),\
         features as (\
             select\
-            array_to_json(array_agg(feature.*)) as \"features\"\
+            array_to_json(array_agg(feature.*)) as features\
             from\
             feature\
         )\
@@ -57,7 +54,6 @@ function getData() {
             }
             if (res) {
                 var jsonData = JSON.parse(JSON.stringify(res.rows));
-                console.log(jsonData);
                 resolve(jsonData[0].row_to_json);
             }
         })

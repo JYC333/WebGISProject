@@ -46,11 +46,11 @@ function getData(girdid) {
         (\
             with selected_trajectories as\
             (\
-                select * from tbl_trajectory_edges where trajectory_id in\
+                select * from tbl_trajectory_edges1 where trajectory_id in\
                 (\
                     select distinct trajectory_id from\
                     (\
-                        select t.trajectory_id,t.edge_id,ng.grid_id from tbl_trajectory_edges t,tbl_network_grid_mapping ng\
+                        select t.trajectory_id,t.edge_id,ng.grid_id from tbl_trajectory_edges1 t,tbl_network_grid_mapping ng\
                         where t.edge_id=ng.network_edge_id and ng.grid_id in ("+girdid+")"+
                     ") as unique_trajectories\
                 )\

@@ -24,30 +24,23 @@ function getData() {
 
     const pool = new pg.Pool(config);
     var SQLcommand = "with feature as(\
+        select \
+        floor(extract(epoch from ts::timestamp with time zone)/(60*15)) tt,\
+        count(1) cc,\
+        to_char(to_timestamp(floor(extract(epoch from ts::timestamp with time zone)/(60*15))*60*15),'yyyy-MM-dd HH24:MI') date_text\
+        from sample10000\
+        group by tt\
+        order by tt\
+    ),\
+    features as (\
         select\
-            td.grid_id as \"gid\",\
-            td.trajectories as \"trajectories\",\
-            td.trajectories_start as \"trajectories_start\",\
-            td.trajectories_end as \"trajectories_end\",\
-            (\
-                select polygon->'coordinates'\
-                from\
-                (\
-                    select st_centroid(td.the_geom)::json polygon\
-                ) as polygon\
-            ) as \"contour\",\
-            td.till as \"till\",\
-            td.inside as \"inside\",\
-            td.past as \"past\"\
-            from tbl_distance as td\
-        ),\
-        features as (\
-            select\
-            array_to_json(array_agg(feature.*)) as \"features\"\
-            from\
-            feature\
-        )\
-        select row_to_json(features.*) from features";
+        array_to_json(array_agg(feature.tt)) as \"tt\",\
+        array_to_json(array_agg(feature.cc)) as \"cc\",\
+        array_to_json(array_agg(feature.date_text)) as \"date_text\"\
+        from\
+        feature\
+    )\
+    select row_to_json(features.*) from features";
 
     return new Promise(function (resolve, reject) {
         pool.query(SQLcommand, (err, res) => {
@@ -57,7 +50,6 @@ function getData() {
             }
             if (res) {
                 var jsonData = JSON.parse(JSON.stringify(res.rows));
-                console.log(jsonData);
                 resolve(jsonData[0].row_to_json);
             }
         })

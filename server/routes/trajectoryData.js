@@ -29,7 +29,6 @@ function getData() {
             n.id as id,\
             n.cpath as cpath,\
             n.ts as ts,\
-            n.length_in_m as length,\
             (\
                 select lines->'coordinates'\
                 from\

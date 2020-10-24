@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactEcharts from 'echarts-for-react';
 
 import useTimeFilter from "./store/timeFilter";
-import useMaxIndex from './store/maxIndex';
+import useMaxValue from './store/maxValue';
 
 import echarts from 'echarts/lib/echarts'
 import 'echarts/lib/chart/bar';
@@ -11,13 +11,13 @@ import 'echarts/lib/component/title';
 import 'echarts/lib/component/legend';
 import 'echarts/lib/component/markPoint';
 
-function Charts(props) {
+function TimeSlider() {
     const [chartsData, setChartsData] = useState();
     const [option, setOption] = useState({});
     const [echartsReactRef, setEchartsReactRef] = useState();
-    const [echartsInstance, setEchartsInstance] = useState();
+
     const [timeFilterState, timeFilterActions] = useTimeFilter();
-    const [maxIndexState, maxIndexActions] = useMaxIndex();
+    const [maxIndexState, maxIndexActions] = useMaxValue();
 
     useEffect(() => {
         fetch('http://localhost:9000/chartsData', {
@@ -29,7 +29,6 @@ function Charts(props) {
             .then(res => res.json())
             .then(data => {
                 setChartsData(data);
-                // props.setTimeFilter([, [...data.tt].pop()]);
                 timeFilterActions.setStartIndex(0);
                 timeFilterActions.setEndIndex(data.tt.length);
                 timeFilterActions.setStartTimestamp(data.tt[0]);
@@ -41,7 +40,7 @@ function Charts(props) {
                         x: 'center'
                     },
                     grid: [
-                        { y: '10%'}
+                        { y: '10%' }
                     ],
                     tooltip: {
                         trigger: 'axis',
@@ -54,21 +53,17 @@ function Charts(props) {
                         type: 'value'
                     },
                     dataZoom: [
-                        {   // 这个dataZoom组件，默认控制x轴。
-                            type: 'slider', // 这个 dataZoom 组件是 slider 型 dataZoom 组件
-                            // startValue: 1,      // 左边在 10% 的位置。
-                            // endValue: 5         // 右边在 60% 的位置。
+                        {
+                            type: 'slider',
                         },
-                        {   // 这个dataZoom组件，也控制x轴。
-                            type: 'inside', // 这个 dataZoom 组件是 inside 型 dataZoom 组件
-                            // startValue: 6,      // 左边在 10% 的位置。
-                            // endValue: 18         // 右边在 60% 的位置。
+                        {
+                            type: 'inside',
                         }
                     ],
                     series: [
                         {
                             name: 'number',
-                            type: 'bar',   //这块要定义type类型，柱形图是bar,饼图是pie
+                            type: 'bar',
                             data: data.cc
                         }
                     ]
@@ -117,7 +112,6 @@ function Charts(props) {
     useEffect(() => {
         if (echartsReactRef) {
             let echartsInstance = echartsReactRef.getEchartsInstance();
-            setEchartsInstance(echartsInstance);
             echartsInstance.on('dataZoom', dataZoom);
         }
     }, [option]);
@@ -131,4 +125,4 @@ function Charts(props) {
 
 };
 
-export default Charts;
+export default TimeSlider;
